@@ -1,0 +1,29 @@
+To run our project "Traffic Control Using sFlow" follow the steps below:
+
+1.Install and start floodlight 
+
+2.Start Mininet using following:
+> sudo mn --switch ovs --controller=remote --topo tree,depth=2,fanout=2
+
+3.Set sflows:
+
+> sudo ovs-vsctl -- --id=@sflow create sflow agent=eth0 target=\"127.0.0.1:6343\" sampling=2 polling=20 -- -- set bridge s3 sflow=@sflow
+> sudo ovs-vsctl -- --id=@sflow create sflow agent=eth0 target=\"127.0.0.1:6343\" sampling=2 polling=20 -- -- set bridge s2 sflow=@sflow
+> sudo ovs-vsctl -- --id=@sflow create sflow agent=eth0 target=\"127.0.0.1:6343\" sampling=2 polling=20 -- -- set bridge s1 sflow=@sflow
+
+In the above commands, set 6343 refers to the port where sflow will be running. And 127.0.0.1 is the IP where sflow is running. We run 3 separate commands to set agents at each of our 4 switches in our mininet topology.
+
+4.Start sflow:
+> sudo ./sFlow-RT.sh
+
+In our python script, we used a bunch of REST calls to sFlow. To capture the data source of each flow that was recorded:
+GET 'http://localhost:8008/metric/127.0.0.1/11.flows/json' to get the flows where ‘11’ is the data source.
+We then issued control messages to our floodlight controlled using commands such as below:
+http://localhost:8080/wm/staticflowpusher/json
+{"switch": "00:00:00:00:00:00:00:02", "name":"flow-mod-1", "cookie":"0", "priority":"32768", "in_port":"1","active":"true", "actions":"set_ip_ttl=0"}
+
+5.Start the python script:
+> sudo python sdnproject.py
+
+6.You can optionally also view the flows graphically by opening up a browser and running localhost:8008/, where localhost can be replaced by the IP on which sFlow is running.
+
